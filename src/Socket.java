@@ -60,9 +60,26 @@ public class Socket {
         availableCores.remove(core);
     }
 
-    public void removeJob(final double time,
-                          final Job oneJob){
-        Core core = this.jobToCore.remove(oneJob);
+   public synchronized void  removeJob(final Job oneJob){
+        Core core = null;
+        ConcurrentHashMap<Job,Core> tempjobToCore = new ConcurrentHashMap<>();
+        for (Iterator<Map.Entry<Job, Core>> iterator =
+             this.jobToCore.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<Job,Core> entry = iterator.next();
+            Job key =entry.getKey();
+            Core value = entry.getValue();
+            this.jobToCore.remove(key);
+            if (key.equals(oneJob)){
+                core = value;
+                iterator.remove();
+                System.out.println(this.jobToCore);
+            }else {
+                tempjobToCore.put(key, value);
+            }
+        }
+        System.out.println(tempjobToCore);
+        this.jobToCore = tempjobToCore;
+
         if (core == null) {
             System.out.println("Error!Cannot find the core!");
         }else{
@@ -73,6 +90,7 @@ public class Socket {
             this.availableCores.add(core);
         }
     }
+
 
     public void process(double time)
     {
